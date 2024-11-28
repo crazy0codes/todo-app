@@ -1,0 +1,18 @@
+
+
+.todo-options {
+    width: 100%;
+    display: flex;
+    justify-content: right;
+}
+
+.todo-options-btn {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    margin: 2px;
+}
+
+.completed {
+    text-decoration: line-through;
+}

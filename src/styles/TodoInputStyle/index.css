@@ -1,0 +1,58 @@
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+#TodoInputView {
+    display: flex;
+    padding: 10px;
+    margin: 10px;
+    height: 55px;
+    align-items: center;
+    outline: 2px solid black;
+    width: calc(500px);
+}
+
+.todo-textarea {
+    width: 470px;
+    padding-top: 6px;
+    font-size: 17px;
+    border: none;
+    outline: none;
+    max-height: 50px;
+}
+
+.todo-textarea::-webkit-scrollbar {
+    display: none;
+}
+
+.todo-add-btn {
+    padding: 4px;
+    margin: 2px;
+    height: inherit;
+    background-color: rgb(104, 236, 104);
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.todo-task {
+    outline: 2px solid black;
+    padding: 2px;
+    margin: 10px;
+    padding: 10px;
+    background-color: violet;
+    max-width: 500px;
+    position: relative;
+}
+
+.todo-task-completed {
+    outline: 2px solid black;
+    padding: 2px;
+    margin: 10px;
+    padding: 10px;
+    background-color: violet;
+    max-width: 500px;
+    position: relative;
+    text-decoration: line-through;
+}
