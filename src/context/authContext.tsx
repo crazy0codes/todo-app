@@ -1,34 +1,133 @@
-import { initializeApp } from "firebase/app";
-import { createContext } from "react";
-
-type FirebaseConfig = {
-  apiKey: string;
-  authDomain: string;
-  projectId: string;
-  storageBucket: string;
-  appId: string;
-  messagingSenderId: string;
-};
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
+import { firebaseConfig } from "../utils/firebaseConfig";
+import { useState, useEffect, ReactNode, createContext } from "react";
 
 export type User = {
   isLogged: boolean;
   email: string | null;
   token: string | null;
+  userId: string | null;
 };
 
-export type AuthContextValue = {
-  user: User,
-  setUser: React.Dispatch<React.SetStateAction<User>> | null;
+interface AuthProviderType {
+  userLogin: (email: string, password: string) => Promise<void>;
+  userSignUp: (email: string, password: string) => Promise<void>;
+  user: User | null;
+}
+
+const defaultUser = {
+  isLogged: false,
+  email: null,
+  token: null,
+  userId: null,
+} as User;
+
+const defaultContext = {
+  userLogin(email: string, password: string) {
+    return Promise.resolve();
+  },
+  userSignUp(email: string, password: string) {
+    return Promise.resolve();
+  },
+  user: defaultUser,
 };
 
-const firebaseConfig: FirebaseConfig = {
-  apiKey: "AIzaSyA3U-DMt_FjbZ2XBjIjeLe27TuvuQ_6IEU",
-  authDomain: "todo-app-23a8f.firebaseapp.com",
-  projectId: "todo-app-23a8f",
-  storageBucket: "todo-app-23a8f.appspot.com",
-  messagingSenderId: "515948203240",
-  appId: "1:515948203240:web:048a5058ebc3c149bc4d5d",
-};
+export const AuthContext = createContext<AuthProviderType>(defaultContext);
 
-export const fireBaseApp = initializeApp(firebaseConfig);
-export const AuthContext = createContext<AuthContextValue | null>(null);
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
+  const [user, setUser] = useState<User>(defaultUser);
+
+  //signUp function
+  const userSignUp = async (email: string, password: string) => {
+    try {
+      if (email && password) {
+        const URI = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${firebaseConfig.apiKey}`;
+        const response = await axios.post(URI, {
+          email,
+          password,
+          returnSecureToken: true,
+        });
+
+        const { idToken } = response.data;
+        const { user_id, email: decodedEmail } = jwtDecode(idToken) as {
+          user_id: string;
+          email: string;
+        };
+
+        setUser(() => ({
+          email: decodedEmail,
+          token: idToken,
+          userId: user_id,
+          isLogged: true,
+        }));
+        localStorage.setItem("accessToken", idToken);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  //Login function
+  const userLogin = async (email: string, password: string) => {
+    const URI = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${firebaseConfig.apiKey}`;
+    try {
+      if (email && password) {
+        const response = await axios.post(URI, {
+          email,
+          password,
+          returnSecureToken: true,
+        });
+
+        const { idToken } = response.data;
+
+        localStorage.setItem("accessToken", idToken);
+
+        const decodedToken = jwtDecode(idToken) as {
+          user_id: string;
+          email: string;
+        };
+
+        setUser(() => ({
+          isLogged: true,
+          token: idToken,
+          email: decodedToken.email,
+          userId: decodedToken.user_id,
+        }));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    const idToken = localStorage.getItem("accessToken");
+    if (idToken) {
+      const decodedToken = jwtDecode(idToken) as {
+        user_id: string;
+        email: string;
+      };
+
+      setUser(() => ({
+        isLogged: true,
+        token: idToken,
+        email: decodedToken.email,
+        userId: decodedToken.user_id,
+      }));
+    }
+  }, []);
+
+  return (
+    <AuthContext.Provider
+      value={{
+        userLogin,
+        userSignUp,
+        user,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};

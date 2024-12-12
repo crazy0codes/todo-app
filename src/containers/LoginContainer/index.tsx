@@ -1,30 +1,20 @@
-import React, { useContext, useEffect, useState } from "react";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  signInWithCustomToken,
-} from "firebase/auth";
+import React, { useContext, useEffect } from "react";
 import { LoginView } from "../../views/LoginView";
 import { AuthContext } from "../../context/authContext";
+import { useNavigate } from "react-router-dom";
 
-const auth = getAuth();
 
 export function LoginContainer() {
-  const setUser = useContext(AuthContext)?.setUser
+  const navigate = useNavigate()
+  const context = useContext(AuthContext);
+  const {user, userLogin} = context;
+
   useEffect(() => {
-    const accessToken = localStorage.getItem("accessToken") || "";
-    if (accessToken) {
-      signInWithCustomToken(auth, accessToken)
-        .then((userCredential) => {
-          const user = userCredential;
-          
-        })
-        .catch((error) => {
-          alert(error);
-          console.log(error);
-        });
-    }
-  });
+    if(user?.isLogged === true){
+        navigate('/')
+      }
+      console.log(context)
+  },[user])
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -33,24 +23,7 @@ export function LoginContainer() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    if (email && password) {
-      signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          if(setUser){
-            setUser(prev => ({
-              ...prev,
-              isLogged: true
-            }))
-          }
-        })
-        .catch((error) => {
-          console.error("Login failed:", error.message);
-          alert(`Login failed: ${error.message}`);
-        });
-    } else {
-      alert("Please fill out both fields.");
-    }
+    userLogin(email, password)
   }
 
   return <LoginView handleSubmit={handleSubmit} />;

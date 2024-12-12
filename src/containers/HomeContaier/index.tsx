@@ -1,19 +1,35 @@
-import React, {useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "../../styles/TodoInputStyle/index.css";
 import "../../styles/TodoListStyle/index.css";
 import { HomeView } from "../../views/HomeView";
+import { AuthContext } from "../../context/authContext";
+import { useNavigate } from "react-router-dom";
+import { firebaseConfig } from "../../utils/firebaseConfig";
+import {
+  collection,
+  onSnapshot,
+  getFirestore,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+} from "firebase/firestore";
+import { initializeApp } from "firebase/app";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 export type TodoList = {
+  todo_id: string;
   todo: string | null;
   status: boolean;
 };
 
 const demoData: TodoList[] = [
+  { todo_id: "w", todo: "Complete the DSA course", status: false },
   {
-    todo: "Complete the DSA course",
-    status: false,
-  },
-  {
+    todo_id: "d",
     todo: "Complete the React course",
     status: false,
   },
@@ -28,62 +44,81 @@ export type Props = {
   todoList: TodoList[];
 };
 
-
-
 export function HomeContainer() {
-  const [todoList, setTodoList] = useState<TodoList[]>([]);
+  const Context = useContext(AuthContext);
+  const [todoList, setTodoList] = useState<TodoList[]>(demoData);
+  const navigate = useNavigate();
+
   useEffect(() => {
-    setTodoList(() => demoData);
-  }, []);
-  
-  function delTask(event: MouseBtnEvent) {
+    if (!Context?.user?.isLogged) {
+      navigate("/login");
+      return;
+    }
+    const userTodosRef = collection(db, `todos-${Context.user.userId}`);
+    const unsubscribe = onSnapshot(userTodosRef, (snapshot) => {
+      const fetchedTodos: TodoList[] = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          todo_id: doc.id,
+          todo: data.todo || null,
+          status: data.status || false,
+        };
+      });
+      setTodoList(fetchedTodos);
+    });
+
+    return () => unsubscribe();
+  }, [Context.user?.isLogged, navigate]);
+
+  async function delTask(event: MouseBtnEvent) {
     const target = event.target as HTMLElement;
     const index = target?.getAttribute("data-index");
-  
+
     if (index !== null) {
-      const idx = parseInt(index, 10);
-      setTodoList((prev) => prev.filter((_, i) => i !== idx));
+      const userTodosRef = collection(db, `todos-${Context?.user?.userId}`);
+      const docRef = doc(userTodosRef, index);
+      await deleteDoc(docRef);
     }
   }
-  
-  function completeTask(event: MouseBtnEvent) {
+
+  async function completeTask(event: MouseBtnEvent) {
     const target = event.target as HTMLElement;
     const index = target?.getAttribute("data-index");
-  
+
     if (index) {
-      const id = parseInt(index, 10);
-      setTodoList((prev) =>
-        prev.map((todoObj, i) =>
-          i === id ? { ...todoObj, status: !todoObj.status } : todoObj
-        )
-      );
+      if (index !== null) {
+        const userTodosRef = collection(db, `todos-${Context?.user?.userId}`);
+        const docRef = doc(userTodosRef, index);
+        const docData = await getDoc(docRef);
+        if(docData.data()?.status){
+          await updateDoc(docRef, { status: false });
+        }
+        else {
+          await updateDoc(docRef, {status : true});
+        }
+      }
     }
   }
-  
-  function addTodo() {
-    const todoElement: HTMLTextAreaElement | null =
+
+  async function addTodo() {
+    const todoElement =
       document.querySelector<HTMLTextAreaElement>(".todo-textarea");
     const todo = todoElement?.value.trim() || "";
-    if (todo && todoElement) {
-      setTodoList((prev): TodoList[] => [
-        ...prev,
-        {
-          todo,
-          status: false,
-        },
-      ]);
-      todoElement.value = "";
+    if (todo) {
+      const userTodosRef = collection(db, `todos-${Context?.user?.userId}`);
+      await addDoc(userTodosRef, { todo, status: false });
+      if (todoElement) todoElement.value = "";
     }
   }
-  
+
   return (
-    <HomeView 
-    setTodoList={setTodoList}
-    todoList={todoList}
-    style="todo-task"
-    delTask={delTask}
-    completeTask={completeTask}
-    addTodo={addTodo}
+    <HomeView
+      setTodoList={setTodoList}
+      todoList={todoList}
+      style="todo-task"
+      delTask={delTask}
+      completeTask={completeTask}
+      addTodo={addTodo}
     />
   );
 }

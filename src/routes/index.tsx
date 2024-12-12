@@ -1,26 +1,40 @@
-import { createBrowserRouter, Route, RouterProvider } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import { LoginPage } from "../pages/LoginPage";
 import { SignUpPage } from "../pages/SignUpPage";
 import { HomePage } from "../pages/HomePage";
-import { ReactNode, useContext } from "react";
-import { AuthContext } from "../context/authContext";
 
-function ProtectedRoute({ children }: { children: ReactNode }) {
-  const isLogged = useContext(AuthContext)?.user.isLogged;
-  return isLogged ? (children as ReactNode) : <SignUpPage />;
+function Error() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+      }}
+    >
+      <h1>404 NOT FOUND</h1>
+    </div>
+  );
 }
 
 export const routes = createBrowserRouter([
   {
     path: "/",
-    element: <HomePage />,
+    element: (
+    <HomePage />
+    ),
   },
   {
     path: "/login",
     element: <LoginPage />,
   },
   {
-    path: "/sigup",
+    path: "/signup",
     element: <SignUpPage />,
+  },
+  {
+    path: "*",
+    element: <Error />,
   },
 ]);

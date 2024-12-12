@@ -45,16 +45,16 @@ export function HomeView({
                 onClick={(e) => delTask(e, setTodoList)}
                 style="todo-options-btn"
               >
-                <Trash size={"20px"} data-index={index} />
+                <Trash size={"20px"} data-index={taskObj.todo_id} />
               </Button>
               <Button
                 onClick={(e) => completeTask(e, setTodoList)}
                 style="todo-options-btn"
               >
                 {taskObj.status ? (
-                  <CircleX size={"20px"} data-index={index} />
+                  <CircleX size={"20px"} data-index={taskObj.todo_id} />
                 ) : (
-                  <CircleCheck size={"20px"} data-index={index} />
+                  <CircleCheck size={"20px"} data-index={taskObj.todo_id} />
                 )}
               </Button>
             </div>

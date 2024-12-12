@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Button } from "../../components/base/Button";
 import { FormInput } from "../../components/base/FormInput";
 import "../../styles/LoginView/index.css";
@@ -28,9 +29,9 @@ export function SignUpView({ handleSubmit }: Submit) {
           </div>
           <div className="form-footer">
             <small>Already have a account</small>
-            <a href="#" style={{ fontSize: "14px",color: "blue" }}>
+            <Link to={'/login'} style={{ fontSize: "14px",color: "blue" }}>
               Login
-            </a>
+            </Link>
           </div>
         </form>
       </div>

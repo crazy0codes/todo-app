@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "../../components/base/Button";
 import { FormInput } from "../../components/base/FormInput";
 import "../../styles/LoginView/index.css";
+import { Link } from "react-router-dom";
 
 export type Submit = {
   handleSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
@@ -32,9 +33,9 @@ export function LoginView({ handleSubmit }: Submit) {
           </div>
           <div className="form-footer">
             <small>Don't have an account ?</small>
-            <a href="#" style={{ fontSize: "14px",color: "blue" }}>
+            <Link to={'/signup'} style={{ fontSize: "14px",color: "blue" }}>
               create account
-            </a>
+            </Link>
           </div>
         </form>
       </div>
